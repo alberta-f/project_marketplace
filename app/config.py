@@ -29,10 +29,18 @@ class SessionConfig(BaseConfig):
     cookie_name: str = Field("session", alias="SESSION_COOKIE_NAME")
 
 
+class JWTConfig(BaseConfig):
+    secret_key: SecretStr = Field(..., alias='JWT_SECRET_KEY')
+    algorithm: str = Field(..., alias='JWT_ALGORITHM')
+    access_expire_mins: str = Field(...,
+                                    alias='JWT_ACCESS_TOKEN_EXPIRE_MINS')
+
+
 class Config(BaseModel):
     database: DatabaseConfig = Field(default_factory=DatabaseConfig)
     minio: MinioConfig = Field(default_factory=MinioConfig)
     session: SessionConfig = Field(default_factory=SessionConfig)
+    jwt: JWTConfig = Field(default_factory=JWTConfig)
 
 
 config = Config()
