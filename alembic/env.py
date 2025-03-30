@@ -13,8 +13,8 @@ from app.models.models import Base  # не забудь, чтобы User был 
 db_url = project_config.database.url
 
 # 🔍 Если запускаемся НЕ в Docker — заменим хост "db" на "localhost"
-if os.getenv("RUNNING_IN_DOCKER") != "true":
-    db_url = db_url.replace("db", "localhost", 1)
+# if os.getenv("RUNNING_IN_DOCKER") != "true":
+#     db_url = db_url.replace("db", "localhost", 1)
 
 # Alembic config
 config = context.config
