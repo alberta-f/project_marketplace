@@ -30,9 +30,9 @@ class SessionConfig(BaseConfig):
 
 
 class JWTConfig(BaseConfig):
-    secret_key: SecretStr = Field(..., alias='JWT_SECRET_KEY')
+    secret_key: str = Field(..., alias='JWT_SECRET_KEY')
     algorithm: str = Field(..., alias='JWT_ALGORITHM')
-    access_expire_mins: str = Field(...,
+    access_expire_mins: int = Field(...,
                                     alias='JWT_ACCESS_TOKEN_EXPIRE_MINS')
 
 
