@@ -3,12 +3,17 @@ repos:
     rev: v0.3.0
     hooks:
       - id: ruff
-        args: ["--fix"]  # авто-фикс по возможности
+        args: ["--fix"]
+        exclude: ^alembic/
 
-  - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.8.0
+  - repo: local
     hooks:
       - id: mypy
+        name: mypy (poetry)
+        entry: poetry run mypy
+        language: system
+        types: [python]
+        exclude: ^alembic/
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.5.0
