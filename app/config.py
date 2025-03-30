@@ -1,0 +1,38 @@
+from pydantic import BaseModel, Field, SecretStr
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+class BaseConfig(BaseSettings):
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+
+
+class DatabaseConfig(BaseConfig):
+    db: str = Field(..., alias="POSTGRES_DB")
+    user: str = Field(..., alias="POSTGRES_USER")
+    password: SecretStr = Field(..., alias="POSTGRES_PASSWORD")
+    host: str = Field(..., alias="POSTGRES_HOST")
+    port: int = Field(..., alias="POSTGRES_PORT")
+
+    @property
+    def url(self) -> str:
+        return f"postgresql+asyncpg://{self.user}:{self.password.get_secret_value()}@{self.host}:{self.port}/{self.db}"
+
+
+class MinioConfig(BaseConfig):
+    access_key: str = Field(..., alias="MINIO_ROOT_USER")
+    secret_key: SecretStr = Field(..., alias="MINIO_ROOT_PASSWORD")
+    endpoint: str = Field(..., alias="MINIO_ENDPOINT")
+    bucket: str = Field("marketplace", alias="S3_BUCKET")
+
+
+class SessionConfig(BaseConfig):
+    cookie_name: str = Field("session", alias="SESSION_COOKIE_NAME")
+
+
+class Config(BaseModel):
+    database: DatabaseConfig = Field(default_factory=DatabaseConfig)
+    minio: MinioConfig = Field(default_factory=MinioConfig)
+    session: SessionConfig = Field(default_factory=SessionConfig)
+
+
+config = Config()
