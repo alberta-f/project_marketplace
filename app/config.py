@@ -36,11 +36,17 @@ class JWTConfig(BaseConfig):
                                     alias='JWT_ACCESS_TOKEN_EXPIRE_MINS')
 
 
+class RedisConfig(BaseConfig):
+    host: str = Field(..., alias='REDIS_HOST')
+    port: int = Field(..., alias='REDIS_PORT')
+    db: int = Field(..., alias='REDIS_DB')
+
 class Config(BaseModel):
     database: DatabaseConfig = Field(default_factory=DatabaseConfig)
     minio: MinioConfig = Field(default_factory=MinioConfig)
     session: SessionConfig = Field(default_factory=SessionConfig)
     jwt: JWTConfig = Field(default_factory=JWTConfig)
+    redis: RedisConfig = Field(default_factory=RedisConfig)
 
 
 config = Config()
