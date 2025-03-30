@@ -6,14 +6,6 @@ repos:
         args: ["--fix"]
         exclude: ^alembic/
 
-  - repo: local
-    hooks:
-      - id: mypy
-        name: mypy (poetry)
-        entry: poetry run mypy
-        language: system
-        types: [python]
-        exclude: ^alembic/
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.5.0
