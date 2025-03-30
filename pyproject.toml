@@ -29,6 +29,7 @@ ruff = "^0.11.2"
 pre-commit = "^4.2.0"
 pytest = "^8.3.5"
 alembic = "^1.15.2"
+mypy = "^1.15.0"
 
 
 [tool.ruff]
@@ -44,9 +45,6 @@ select = ["E", "F", "I"]
 quote-style = "double"
 indent-style = "space"
 
-
-[tool.mypy]
-plugins = ["pydantic.mypy.plugin"]
 
 [[tool.mypy.overrides]]
 module = "alembic.*"
