@@ -1,11 +1,16 @@
 from fastapi import APIRouter, Depends, FastAPI
+from fastapi.middleware import Middleware
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql import text
 
 from app.db.session import get_db_session
+from app.middlewares.auth import AuthMiddleware
 from app.routes.auth import auth_router
 
-app = FastAPI()
+middleware = [
+    Middleware(AuthMiddleware)
+]
+app = FastAPI(middleware=middleware)
 main_router = APIRouter()
 
 main_router.include_router(auth_router, prefix='/auth')
