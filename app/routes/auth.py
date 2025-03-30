@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Response
+from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
@@ -50,7 +50,7 @@ async def login(
     if not user or not verify_password(data.password, user.hashed_password):
         raise HTTPException(status_code=401, detail='Invalid credentials')
 
-    token = create_access_token(user.id)
+    token = await create_access_token(user.id)
     await store_token(user.id, token)
 
     response.set_cookie(
@@ -61,5 +61,16 @@ async def login(
         samesite='lax',
         secure=False #!!!!! поменять на True
     )
+
+    return user
+
+
+@auth_router.get('/me', response_model=UserRead)
+async def get_me(request: Request):
+    user = request.state.user
+
+    if not user:
+        raise HTTPException(status_code=401,
+                            detail='Unauthoriszed')
 
     return user
