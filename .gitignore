@@ -7,3 +7,6 @@ poetry.lock
 
 .env
 .env.*
+
+.ruff_cache/
+.mypy_cache/
