@@ -8,7 +8,7 @@ from app.config import config
 from app.services.redis import get_redis
 
 
-def create_access_token(user_id: UUID) -> str:
+async def create_access_token(user_id: UUID) -> str:
     expire = datetime.now(timezone.utc) + timedelta(minutes=config.jwt.access_expire_mins)
     payload = {
         "sub": str(user_id),
@@ -28,7 +28,7 @@ async def store_token(user_id: UUID,
     await redis.set(str(user_id), token, ex=expires_in)
 
 
-def decode_token(token: str) -> Union[UUID, None]:
+async def decode_token(token: str) -> Union[UUID, None]:
     try:
         payload = jwt.decode(token,
                              config.jwt.secret_key,
@@ -53,3 +53,9 @@ async def verify_access_token(token: str) -> UUID | None:
         return None
 
     return user_id
+
+
+async def delete_token(user_id:UUID):
+    redis = await get_redis()
+
+    await redis.delete(str(user_id))

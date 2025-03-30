@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
+from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
@@ -7,7 +8,7 @@ from app.db.session import get_db_session
 from app.models.models import User
 from app.schemas.user import UserCreate, UserLogin, UserRead
 from app.services.auth import hash_paasword, verify_password
-from app.services.jwt import create_access_token, store_token
+from app.services.jwt import create_access_token, delete_token, store_token
 
 auth_router = APIRouter()
 
@@ -74,3 +75,16 @@ async def get_me(request: Request):
                             detail='Unauthoriszed')
 
     return user
+
+
+@auth_router.post('/logout')
+async def logout(request: Request, response: Response):
+    user = request.state.user
+
+    if user:
+        await delete_token(user.id)
+
+    response = JSONResponse(content={"detail": "Logged out"})
+    response.delete_cookie("access_token")
+
+    return response
