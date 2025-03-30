@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Union
 from uuid import UUID
 
@@ -8,7 +8,7 @@ from app.config import config
 
 
 def create_access_token(user_id: UUID) -> str:
-    expire = datetime.utcnow() + timedelta(minutes=config.jwt.access_expire_mins)
+    expire = datetime.now(timezone.utc) + timedelta(minutes=config.jwt.access_expire_mins)
     payload = {
         "sub": str(user_id),
         "exp": expire

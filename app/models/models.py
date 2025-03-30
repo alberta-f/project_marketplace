@@ -16,4 +16,4 @@ class User(Base):
     hashed_password: Mapped[str] = mapped_column(String(128), nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[datetime.datetime] = mapped_column(DateTime,
-                                                          default=datetime.datetime.utcnow)
+                                                          default=datetime.datetime.now)
