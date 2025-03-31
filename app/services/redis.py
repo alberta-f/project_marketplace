@@ -15,3 +15,7 @@ async def get_redis():
         )
 
     return _redis
+
+
+async def get_redis_key(token, user_id, token_type):
+    return f'{token_type}:{user_id}:{token}'
