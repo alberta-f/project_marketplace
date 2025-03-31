@@ -41,12 +41,18 @@ class RedisConfig(BaseConfig):
     port: int = Field(..., alias='REDIS_PORT')
     db: int = Field(..., alias='REDIS_DB')
 
+
+class AppConfig(BaseConfig):
+    url: str = Field(..., alias='APP_URL')
+
+
 class Config(BaseModel):
     database: DatabaseConfig = Field(default_factory=DatabaseConfig)
     minio: MinioConfig = Field(default_factory=MinioConfig)
     session: SessionConfig = Field(default_factory=SessionConfig)
     jwt: JWTConfig = Field(default_factory=JWTConfig)
     redis: RedisConfig = Field(default_factory=RedisConfig)
+    app: AppConfig = Field(default_factory=AppConfig)
 
 
 config = Config()
