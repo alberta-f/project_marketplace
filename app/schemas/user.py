@@ -7,6 +7,7 @@ class UserCreate(BaseModel):
     email: EmailStr
     username: str
     password: str
+    is_active: bool = False
 
 
 class UserRead(BaseModel):
