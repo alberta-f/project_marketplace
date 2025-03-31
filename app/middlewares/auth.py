@@ -4,7 +4,7 @@ from starlette.responses import Response
 
 from app.db.session import async_session_maker
 from app.models.models import User
-from app.services.jwt import verify_access_token
+from app.services.jwt import verify_token
 
 
 class AuthMiddleware(BaseHTTPMiddleware):
@@ -13,7 +13,8 @@ class AuthMiddleware(BaseHTTPMiddleware):
         token = request.cookies.get('access_token')
 
         if token:
-            user_id = await verify_access_token(token)
+            user_id = await verify_token(token=token,
+                                         exc_token_type='access')
 
             if user_id:
                 async with async_session_maker() as session:
