@@ -23,3 +23,12 @@ class UserRead(BaseModel):
 class UserLogin(BaseModel):
     email: EmailStr
     password: str
+
+
+class UserChangePassword(BaseModel):
+    email: EmailStr
+
+
+class UserNewPassword(BaseModel):
+    token: str
+    new_password: str

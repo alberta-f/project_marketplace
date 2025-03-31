@@ -6,14 +6,14 @@ from sqlalchemy.future import select
 from app.config import config
 from app.db.session import get_db_session
 from app.models.models import User
-from app.schemas.user import UserCreate, UserLogin, UserRead
+from app.schemas.user import UserChangePassword, UserCreate, UserLogin, UserNewPassword, UserRead
 from app.services.auth import hash_paasword, verify_password
 from app.services.jwt import create_token, delete_token, verify_token
 
 auth_router = APIRouter()
 
 
-@auth_router.post('/register', response_model=UserRead)
+@auth_router.post('/register') #, response_model=UserRead)
 async def register(data: UserCreate,
                    db_session: AsyncSession = Depends(get_db_session)):
 
@@ -117,3 +117,49 @@ async def logout(request: Request, response: Response):
     response.delete_cookie("access_token")
 
     return response
+
+
+@auth_router.post('/password_reset')
+async def password_reset(
+    data: UserChangePassword,
+    db: AsyncSession = Depends(get_db_session)
+):
+
+    result = await db.execute(select(User).where(User.email == data.email))
+    user = result.scalar_one_or_none()
+
+    if not user:
+        raise HTTPException(status_code=404,
+                            detail='User not found')
+
+    token = await create_token(user_id=user.id,
+                               token_type='password')
+
+    reset_link = f"http://localhost:8000/auth/reset-password?token={token}"
+
+    return {"detail": reset_link}
+
+
+@auth_router.post('/new_password')
+async def new_password(
+    data: UserNewPassword,
+    db: AsyncSession = Depends(get_db_session)
+):
+
+    user_id = await verify_token(token=data.token,
+                                 exc_token_type='password')
+
+    if not user_id:
+        raise HTTPException(status_code=400,
+                            detail="Invalid or expired token")
+
+    user = await db.get(User, user_id)
+
+    if not user:
+        raise HTTPException(status_code=404,
+                            detail='User not found')
+
+    user.hashed_password = hash_paasword(data.new_password)
+    await db.commit()
+
+    return {"detail": "Password updated successfully ✅"}
