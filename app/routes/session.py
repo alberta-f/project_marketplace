@@ -1,4 +1,4 @@
-from fastapi import Depends, HTTPException, Request, Response
+from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -6,15 +6,15 @@ from sqlalchemy.future import select
 from app.config import config
 from app.db.session import get_db_session
 from app.models.models import User
-from app.routes.auth import auth_router
 from app.schemas.user import UserLogin, UserRead
 from app.services.auth import verify_password
 from app.services.deps import get_current_user
 from app.services.jwt import create_token, decode_token, delete_all_user_access_tokens, delete_token
 from app.services.redis import get_redis_key
 
+session_router = APIRouter()
 
-@auth_router.post('/login', response_model=UserRead)
+@session_router.post('/login', response_model=UserRead)
 async def login(
     data: UserLogin,
     response: Response,
@@ -44,7 +44,7 @@ async def login(
     return user
 
 
-@auth_router.get('/me', response_model=UserRead)
+@session_router.get('/me', response_model=UserRead)
 async def get_me(user: User = Depends(get_current_user)):
     if not user:
         raise HTTPException(status_code=401,
@@ -56,7 +56,7 @@ async def get_me(user: User = Depends(get_current_user)):
     return user
 
 
-@auth_router.post('/logout')
+@session_router.post('/logout')
 async def logout(request: Request,
                  response: Response):
 
@@ -79,13 +79,13 @@ async def logout(request: Request,
     return response
 
 
-@auth_router.post('/logout_from_all_sessions')
+@session_router.post('/logout_from_all_sessions')
 async def logout_from_all_sessions(user: User = Depends(get_current_user)):
     await delete_all_user_access_tokens(user.id)
     return {"detail": "Logged out from all sessions ✅"}
 
 
-@auth_router.delete('/delete_user')
+@session_router.delete('/delete_user')
 async def delete_user(user: User = Depends(get_current_user),
                       db: AsyncSession = Depends(get_db_session)
 ):
