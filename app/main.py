@@ -5,7 +5,7 @@ from sqlalchemy.sql import text
 
 from app.db.session import get_db_session
 from app.middlewares.auth import AuthMiddleware
-from app.routes.auth import auth_router
+from app.routes.auth_router import auth_router
 
 middleware = [
     Middleware(AuthMiddleware)
@@ -13,7 +13,7 @@ middleware = [
 app = FastAPI(middleware=middleware)
 main_router = APIRouter()
 
-main_router.include_router(auth_router, prefix='/auth')
+main_router.include_router(auth_router)
 
 @app.get('/ping')
 async def ping(db_session: AsyncSession = Depends(get_db_session)):
