@@ -16,6 +16,7 @@ from app.services.jwt import (
     verify_token,
 )
 from app.services.redis import get_redis_key
+from app.tasks.email import send_email_task
 
 auth_router = APIRouter()
 
@@ -46,6 +47,7 @@ async def register(data: UserCreate,
                          token_type='email')
 
     confirm_link = f"{config.app.url}/auth/confirm-email?token={token}"
+    send_email_task.delay(user.email, 'Регистрация', f'Подтверди по ссылке {confirm_link}')
 
     return {"user": user, "confirm_link": confirm_link}
 
@@ -127,7 +129,7 @@ async def logout(request: Request, response: Response):
         user_id = payload.get("sub") if payload else None
 
         if user_id:
-            redis_key = get_redis_key(token=token,
+            redis_key = await get_redis_key(token=token,
                                   user_id=user_id,
                                   token_type='access')
 
@@ -159,6 +161,7 @@ async def password_reset(
                                token_type='password')
 
     reset_link = f"{config.app.url}/auth/redirect?token={token}"
+    send_email_task.delay(user.email, 'Смена пароля', f'Подтверди смену пароля {reset_link}')
 
     return {"reset_link": reset_link}
 
@@ -193,3 +196,28 @@ async def new_password(
 
     await db.commit()
     return {"detail": "Password changed successfully ✅"}
+
+
+@auth_router.delete('/delete_user')
+async def delete_user(request: Request,
+                      db: AsyncSession = Depends(get_db_session)
+):
+    user = request.state.user
+
+    if not user:
+        raise HTTPException(status_code=401,
+                            detail='Unauthoriszed')
+
+    if not user.is_active:
+        raise HTTPException(status_code=403, detail="Email not confirmed")
+
+    db_user = await db.get(User, user.id)
+    if not db_user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    await db.delete(db_user)
+    await db.commit()
+
+    await delete_all_user_access_tokens(user.id)
+
+    return {"detail": "User deleted successfully"}

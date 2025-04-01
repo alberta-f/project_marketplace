@@ -46,6 +46,27 @@ class AppConfig(BaseConfig):
     url: str = Field(..., alias='APP_URL')
 
 
+class RabbitMQSettings(BaseSettings):
+    host: str
+    port: int
+    user: str
+    password: str
+
+    class Config:
+        env_prefix = "RABBITMQ_"
+
+
+class SMTPSettings(BaseSettings):
+    host: str
+    port: int
+    user: str
+    password: str
+    from_email: str = "no-reply@example.com"
+
+    class Config:
+        env_prefix = 'SMTP_'
+
+
 class Config(BaseModel):
     database: DatabaseConfig = Field(default_factory=DatabaseConfig)
     minio: MinioConfig = Field(default_factory=MinioConfig)
@@ -53,6 +74,7 @@ class Config(BaseModel):
     jwt: JWTConfig = Field(default_factory=JWTConfig)
     redis: RedisConfig = Field(default_factory=RedisConfig)
     app: AppConfig = Field(default_factory=AppConfig)
-
+    rabbitmq: RabbitMQSettings = Field(default_factory=RabbitMQSettings)
+    smtp: SMTPSettings = Field(default_factory=SMTPSettings)
 
 config = Config()

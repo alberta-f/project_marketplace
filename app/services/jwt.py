@@ -14,7 +14,7 @@ async def store_token(user_id: UUID,
                       expires_in: int = config.jwt.access_expire_mins * 60):
 
     redis = await get_redis()
-    redis_key = get_redis_key(token=token,
+    redis_key = await get_redis_key(token=token,
                               user_id=user_id,
                               token_type=token_type)
     await redis.set(redis_key, str(user_id), ex=expires_in)
@@ -79,7 +79,7 @@ async def verify_token(token: str, exc_token_type: str) -> UUID | None:
 
     user_id = payload.get("sub")
     redis = await get_redis()
-    redis_key = get_redis_key(token=token,
+    redis_key = await get_redis_key(token=token,
                               user_id=user_id,
                               token_type=exc_token_type)
     stored_token = await redis.get(redis_key)
