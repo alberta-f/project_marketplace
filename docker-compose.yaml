@@ -68,7 +68,7 @@ services:
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
     env_file:
       - .env
-    healthcheck:                                # 🔥 ДОБАВЬ ЭТО
+    healthcheck:
       test: ["CMD", "rabbitmq-diagnostics", "ping"]
       interval: 10s
       timeout: 5s

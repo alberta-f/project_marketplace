@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import JSONResponse
 
 from app.dependencies import get_user_service
@@ -66,3 +66,17 @@ async def reset_password(
 ):
     await user_service.reset_password(data)
     return {"message": "Password reset successful"}
+
+
+@router.get('/me')
+async def get_me(request: Request):
+    user = request.state.user
+
+    if not user:
+        raise HTTPException(status_code=401,
+                            detail='Unauthoriszed')
+
+    if not user or not user.is_active:
+        raise HTTPException(status_code=403, detail="Email not confirmed")
+
+    return user
