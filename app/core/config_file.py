@@ -32,14 +32,18 @@ class SessionConfig(BaseConfig):
 class JWTConfig(BaseConfig):
     secret_key: str = Field(..., alias='JWT_SECRET_KEY')
     algorithm: str = Field(..., alias='JWT_ALGORITHM')
-    access_expire_mins: int = Field(...,
-                                    alias='JWT_ACCESS_TOKEN_EXPIRE_MINS')
+    single_use_expire_mins: int = Field(...,
+                                    alias='JWT_SINGLE_USE_TOKEN_EXPIRE_MINS')
 
 
 class RedisConfig(BaseConfig):
     host: str = Field(..., alias='REDIS_HOST')
     port: int = Field(..., alias='REDIS_PORT')
     db: int = Field(..., alias='REDIS_DB')
+
+    @property
+    def url(self):
+        return f"redis://{self.host}:{self.port}/{self.db}"
 
 
 class AppConfig(BaseConfig):

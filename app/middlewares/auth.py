@@ -1,28 +1,26 @@
-from sqlalchemy.future import select
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import Response
 
-from app.models.models import User
-from app.services.db import async_session_maker
-from app.services.jwt import verify_token
+from app.dependencies import get_user_service  # Для получения UserService через Depends
+from app.services.user_service import UserService
 
 
 class AuthMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request, call_next) -> Response:
         request.state.user = None
+
         token = request.cookies.get('access_token')
 
         if token:
-            user_id = await verify_token(token=token,
-                                         exc_token_type='access')
+            user_service: UserService = get_user_service()
+
+            user_id = await user_service.token_service.validate("access", token)
 
             if user_id:
-                async with async_session_maker() as session:
-                    res = await session.execute(select(User).where(User.id == user_id))
-                    user = res.scalar_one_or_none()
+                user = await user_service.user_repo.get_by_id(user_id)
 
-                    if user:
-                        request.state.user = user
+                if user:
+                    request.state.user = user
 
         response = await call_next(request)
         return response
