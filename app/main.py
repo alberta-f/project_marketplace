@@ -3,9 +3,9 @@ from fastapi.middleware import Middleware
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql import text
 
-from app.db.session import get_db_session
 from app.middlewares.auth import AuthMiddleware
 from app.routes.auth_router import auth_router
+from app.services.db import get_db_session
 
 middleware = [
     Middleware(AuthMiddleware)

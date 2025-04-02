@@ -10,11 +10,11 @@ from sqlalchemy import update
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from app import tasks
-from app.db.base import Base
-from app.db.session import get_db_session
 from app.main import app
+from app.models.base import Base
 from app.models.models import User
 from app.services import jwt
+from app.services.db import get_db_session
 
 # ⚠️ Новый движок SQLite (in-memory)
 TEST_DB_URL = "sqlite+aiosqlite:///:memory:"

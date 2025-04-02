@@ -2,8 +2,8 @@ from sqlalchemy.future import select
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import Response
 
-from app.db.session import async_session_maker
 from app.models.models import User
+from app.services.db import async_session_maker
 from app.services.jwt import verify_token
 
 

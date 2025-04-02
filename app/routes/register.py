@@ -4,10 +4,10 @@ from sqlalchemy.future import select
 
 from app import tasks
 from app.config import config
-from app.db.session import get_db_session
 from app.models.models import User
 from app.schemas.user import UserCreate
 from app.services.auth import hash_paasword
+from app.services.db import get_db_session
 from app.services.jwt import create_token, verify_token
 
 register_router = APIRouter()
@@ -18,8 +18,8 @@ async def register(data: UserCreate,
 
     query = select(User).where(User.email == data.email)
     result = await db_session.execute(query)
-
     existing_user = result.scalar_one_or_none()
+
     if existing_user:
         raise HTTPException(status_code=400,
                             detail='Email already registered')

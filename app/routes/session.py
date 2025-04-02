@@ -4,10 +4,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
 from app.config import config
-from app.db.session import get_db_session
 from app.models.models import User
 from app.schemas.user import UserLogin, UserRead
 from app.services.auth import verify_password
+from app.services.db import get_db_session
 from app.services.deps import get_current_user
 from app.services.jwt import create_token, decode_token, delete_all_user_access_tokens, delete_token
 from app.services.redis import get_redis_key

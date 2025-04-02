@@ -3,17 +3,17 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
 from app.config import config
-from app.db.session import get_db_session
 from app.models.models import User
 from app.schemas.user import UserChangePassword, UserNewPassword
 from app.services.auth import hash_paasword
+from app.services.db import get_db_session
 from app.services.jwt import create_token, delete_all_user_access_tokens, verify_token
 from app.tasks.email import send_email_task
 
-password_router = APIRouter()
+register_router = APIRouter()
 
 
-@password_router.post('/password_reset')
+@register_router.post('/password_reset')
 async def password_reset(
     data: UserChangePassword,
     db: AsyncSession = Depends(get_db_session)
@@ -38,12 +38,12 @@ async def password_reset(
     return {"reset_link": reset_link}
 
 
-@password_router.get('/redirect')
+@register_router.get('/redirect')
 async def get_token_for_new_password(token: str = Query(...)):
     return {"token": token}
 
 
-@password_router.post('/new_password')
+@register_router.post('/new_password')
 async def new_password(
     data: UserNewPassword,
     db: AsyncSession = Depends(get_db_session)
