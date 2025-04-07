@@ -23,3 +23,7 @@ class DBRepository(Generic[ModelType]):
     async def delete(self, obj: ModelType):
         await self.db.delete(obj)
         await self.db.commit()
+
+    async def update(self, obj: ModelType):
+        await self.db.add(obj)
+        await self.db.commit()

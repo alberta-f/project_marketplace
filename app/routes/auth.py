@@ -1,9 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, Request, Response
 from fastapi.responses import JSONResponse
 
 from app.dependencies import get_user_service
-from app.schemas.user import UserChangePassword, UserCreate, UserLogin, UserNewPassword
-from app.services.user_service import UserService
+from app.schemas.user import UserChangePassword, UserCreate, UserLogin, UserNewPassword, UserUpdate
+from app.services.user import UserService
 
 router = APIRouter(prefix='/auth', tags=['Auth'])
 
@@ -14,11 +14,12 @@ async def register(
     user_service: UserService = Depends(get_user_service)
 ):
 
+    data.is_active = True
     token = await user_service.register_user(data)
     return{"message": 'User registered', "activation_token": token}
 
 
-@router.post("/activate")
+@router.get("/activate")
 async def activate_user(
     token: str,
     user_service: UserService = Depends(get_user_service),
@@ -69,14 +70,29 @@ async def reset_password(
 
 
 @router.get('/me')
-async def get_me(request: Request):
-    user = request.state.user
-
-    if not user:
-        raise HTTPException(status_code=401,
-                            detail='Unauthoriszed')
-
-    if not user or not user.is_active:
-        raise HTTPException(status_code=403, detail="Email not confirmed")
+async def get_me(request: Request,
+                 user_service: UserService = Depends(get_user_service)):
+    user = await user_service.get_user_from_cookie(request)
 
     return user
+
+
+@router.put('/me')
+async def put_me(request: Request,
+                 data: UserUpdate,
+                 user_service: UserService = Depends(get_user_service),
+                 ):
+    user = await user_service.get_user_from_cookie(request)
+
+    await user_service.put_user(user, data)
+    return Response(status_code=204, content='User updated successfully')
+
+
+@router.delete('/me')
+async def delete_user(request: Request,
+                      user_service: UserService = Depends(get_user_service)
+):
+    user = await user_service.get_user_from_cookie(request)
+
+    await user_service.delete_user(user)
+    return Response(status_code=204, content="User deleted successfully")

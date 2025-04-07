@@ -5,7 +5,7 @@ from uuid import UUID
 from jose import JWTError, jwt
 
 from app.core.config_file import config
-from app.repo.repo_redis import RedisRepository
+from app.repo.redis import RedisRepository
 
 
 class TokenRepository:
@@ -27,7 +27,7 @@ class TokenRepository:
         return f"{self.token_type}:{user_id}:{token}"
 
     def _generate_token(self, user_id: UUID) -> str:
-        expire = datetime.now(timezone.utc) + timedelta(seconds=self.ttl)
+        expire = datetime.now(timezone.utc) + timedelta(minutes=self.ttl)
         payload = {
             "sub": str(user_id),
             "type": self.token_type,

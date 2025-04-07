@@ -6,7 +6,7 @@ class SecurityService:
         self.pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
-    def hash_paasword(self, password: str) -> str:
+    def hash_password(self, password: str) -> str:
         return self.pwd_context.hash(password)
 
 

@@ -2,7 +2,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import Response
 
 from app.dependencies import get_user_service  # Для получения UserService через Depends
-from app.services.user_service import UserService
+from app.services.user import UserService
 
 
 class AuthMiddleware(BaseHTTPMiddleware):

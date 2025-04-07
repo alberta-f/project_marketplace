@@ -1,14 +1,14 @@
 from uuid import UUID
 
-from fastapi import HTTPException
+from fastapi import HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import User
-from app.repo.repo_user import UserRepository
-from app.schemas.user import PasswordResetConfirm, UserCreate, UserLogin
-from app.services.mail_service import MailService
-from app.services.security_service import SecurityService
-from app.services.token_service import TokenService
+from app.repo.user import UserRepository
+from app.schemas.user import UserCreate, UserLogin, UserNewPassword, UserUpdate
+from app.services.mail import MailService
+from app.services.security import SecurityService
+from app.services.token import TokenService
 
 
 class UserService:
@@ -30,7 +30,10 @@ class UserService:
             raise HTTPException(status_code=400, detail="User already exists")
 
         hashed_password = self.security.hash_password(data.password)
-        user = User(email=data.email, hashed_password=hashed_password, is_active=False)
+        user = User(email=data.email,
+                    username=data.username,
+                    hashed_password=hashed_password,
+                    is_active=data.is_active)
         user = await self.user_repo.create(user)
 
         activation_token = await self.token_service.generate("activation", user.id)
@@ -63,11 +66,11 @@ class UserService:
     async def logout_user(self, token: str) -> None:
         payload = await self.token_service.repos["access"].decode_token(token)
         if not payload:
-            return
+            raise HTTPException(status_code=403, detail='Not authenticated')
 
         user_id = payload.get("sub")
         if not user_id:
-            return
+            raise HTTPException(status_code=403, detail='Not authenticated')
 
         await self.token_service.delete("access", token, UUID(user_id))
 
@@ -81,7 +84,7 @@ class UserService:
 
         return reset_token
 
-    async def reset_password(self, data: PasswordResetConfirm) -> None:
+    async def reset_password(self, data: UserNewPassword) -> None:
         user_id = await self.token_service.validate("reset", data.token)
         if not user_id:
             raise HTTPException(status_code=400, detail="Invalid or expired token")
@@ -94,3 +97,34 @@ class UserService:
         await self.user_repo.update(user)
 
         await self.token_service.delete_all("access", user.id)
+
+
+    async def put_user(self,
+                       user: User,
+                       data: UserUpdate):
+
+        user.email = data.email
+        user.username = data.username
+        user.hashed_password = self.security.hash_password(data.password)
+
+        await self.user_repo.update(user)
+
+
+    async def delete_user(self, user: User):
+        if not user:
+            raise HTTPException(status_code=403, detail='Not authenticated')
+
+        await self.user_repo.delete(user)
+        await self.token_service.delete_all('access', user.id)
+
+
+    async def get_user_from_cookie(self, request: Request):
+        user = request.state.user
+
+        if not user:
+            raise HTTPException(status_code=401, detail='Not authenticated')
+
+        if not user or not user.is_active:
+            raise HTTPException(status_code=403, detail="Email not confirmed")
+
+        return user

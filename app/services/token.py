@@ -1,7 +1,7 @@
 from uuid import UUID
 
 from app.core.config_file import config
-from app.repo.repo_redis import RedisRepository
+from app.repo.redis import RedisRepository
 from app.repo.token import TokenRepository
 
 

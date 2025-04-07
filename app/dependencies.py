@@ -4,11 +4,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.core.redis import get_redis
-from app.repo.repo_redis import RedisRepository
-from app.services.mail_service import MailService
-from app.services.security_service import SecurityService
-from app.services.token_service import TokenService
-from app.services.user_service import UserService
+from app.repo.redis import RedisRepository
+from app.services.mail import MailService
+from app.services.security import SecurityService
+from app.services.token import TokenService
+from app.services.user import UserService
 
 
 async def get_user_service(

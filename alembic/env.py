@@ -6,8 +6,8 @@ from sqlalchemy import pool
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from alembic import context
-from app.config import config as project_config
-from app.models.models import Base  # не забудь, чтобы User был импортирован
+from app.core.config_file import config as project_config
+from app.models.user import Base  # не забудь, чтобы User был импортирован
 
 # Загружаем DATABASE_URL из config
 db_url = project_config.database.url

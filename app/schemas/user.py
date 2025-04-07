@@ -32,3 +32,9 @@ class UserChangePassword(BaseModel):
 class UserNewPassword(BaseModel):
     token: str
     new_password: str
+
+
+class UserUpdate(BaseModel):
+    email: EmailStr
+    username: str
+    password: str
