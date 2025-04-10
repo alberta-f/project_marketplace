@@ -1,4 +1,5 @@
 from fastapi import Request
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.exceptions.user import (
     InvalidCredentialsException,
@@ -8,13 +9,15 @@ from app.exceptions.user import (
 from app.models.user import User
 from app.repository.user import UserRepository
 from app.schemas.user import UserCreate, UserLogin, UserUpdate
+from app.services.mail import MailService
 from app.services.security import SecurityService
 
 
 class UserService:
-    def __init__(self, db, security_service: SecurityService):
+    def __init__(self, db: AsyncSession, security: SecurityService, mail: MailService):
         self.user_repository = UserRepository(db)
-        self.security = security_service
+        self.security = security
+        self.mail = mail
 
 
     async def register_user(self, data: UserCreate):
@@ -28,6 +31,8 @@ class UserService:
             username=data.username,
             hashed_password=hashed_password,
         )
+
+        self.mail.send_registration_email(email=user.email)
         return await self.user_repository.create(user)
 
 
@@ -53,3 +58,7 @@ class UserService:
         user.hashed_password = self.security.hash_password(data.new_password)
 
         return await self.user_repository.update(user)
+
+
+    async def delete_user(self, user: User):
+        return await self.user_repository.delete(user)
