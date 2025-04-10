@@ -2,10 +2,9 @@ from fastapi import APIRouter, Depends, Request, Response
 from fastapi.responses import JSONResponse
 
 from app.core.config import config
-from app.core.database import get_db
-from app.dependencies import get_security_service, get_user_service
+from app.dependencies import get_user_service
 from app.schemas.user import UserCreate, UserLogin, UserRead, UserUpdate
-from app.services.token import TokenService
+from app.services.token import TokenService, get_token_service
 from app.services.user import UserService
 
 router = APIRouter(prefix='/auth', tags=['Auth'])
@@ -14,10 +13,8 @@ router = APIRouter(prefix='/auth', tags=['Auth'])
 @router.post("/register", response_model=UserRead)
 async def register(
     data: UserCreate,
-    db=Depends(get_db),
-    security=Depends(get_security_service),
+    user_service: UserService = Depends(get_user_service),
 ):
-    user_service = UserService(db, security)
     user = await user_service.register_user(data)
     return user
 
@@ -26,13 +23,12 @@ async def register(
 async def login(
     response: Response,
     data: UserLogin,
-    db=Depends(get_db),
-    security=Depends(get_security_service),
+    user_service: UserService = Depends(get_user_service),
+    token_service: TokenService = Depends(get_token_service)
 ):
-    user_service = UserService(db, security)
     user = await user_service.login_user(data)
 
-    token = TokenService.create_access_token(user.id)
+    token = token_service.create_access_token(user.id)
     response.set_cookie(
         key=config.session.cookie_name,
         value=token,
@@ -58,8 +54,19 @@ async def logout_user(
 
 @router.get('/me')
 async def get_me(request: Request,
-                 user_service: UserService = Depends(get_user_service)):
+                 response: Response,
+                 user_service: UserService = Depends(get_user_service),
+                 token_service: TokenService = Depends(get_token_service)):
     user = await user_service.get_user_from_cookie(request)
+
+    token = token_service.create_access_token(user.id)
+    response.set_cookie(
+        key=config.session.cookie_name,
+        value=token,
+        httponly=True,
+        secure=False,  # True на проде
+        samesite="lax",
+    )
 
     return user
 
