@@ -3,9 +3,9 @@ from starlette.responses import Response
 
 from app.core.config import config
 from app.core.database import async_session_maker
+from app.dependencies import get_token_service
 from app.exceptions.user import NotAuthenticatedException
 from app.repository.user import UserRepository
-from app.services.token import get_token_service
 
 
 class AuthMiddleware(BaseHTTPMiddleware):
