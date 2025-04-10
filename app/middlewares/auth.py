@@ -1,26 +1,32 @@
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import Response
 
-from app.dependencies import get_user_service  # Для получения UserService через Depends
-from app.services.user import UserService
+from app.core.config import config
+from app.core.database import async_session_maker
+from app.exceptions.user import NotAuthenticatedException
+from app.repository.user import UserRepository
+from app.services.token import get_token_service
 
 
 class AuthMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request, call_next) -> Response:
         request.state.user = None
+        token = request.cookies.get(config.session.cookie_name)
 
-        token = request.cookies.get('access_token')
-
-        if token:
-            user_service: UserService = get_user_service()
-
-            user_id = await user_service.token_service.validate("access", token)
+        try:
+            token_service = get_token_service()
+            user_id = token_service.decode_access_token(token)
 
             if user_id:
-                user = await user_service.user_repo.get_by_id(user_id)
+                async with async_session_maker() as session:
+                    repo = UserRepository(session)
+                    user = await repo.get_by_id(user_id)
 
                 if user:
                     request.state.user = user
+
+        except NotAuthenticatedException:
+            request.state.user = None
 
         response = await call_next(request)
         return response
