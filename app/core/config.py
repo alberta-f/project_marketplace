@@ -36,16 +36,6 @@ class JWTConfig(BaseConfig):
                                     alias='JWT_SINGLE_USE_TOKEN_EXPIRE_MINS')
 
 
-class RedisConfig(BaseConfig):
-    host: str = Field(..., alias='REDIS_HOST')
-    port: int = Field(..., alias='REDIS_PORT')
-    db: int = Field(..., alias='REDIS_DB')
-
-    @property
-    def url(self):
-        return f"redis://{self.host}:{self.port}/{self.db}"
-
-
 class AppConfig(BaseConfig):
     url: str = Field(..., alias='APP_URL')
 
@@ -76,7 +66,6 @@ class Config(BaseModel):
     minio: MinioConfig = Field(default_factory=MinioConfig)
     session: SessionConfig = Field(default_factory=SessionConfig)
     jwt: JWTConfig = Field(default_factory=JWTConfig)
-    redis: RedisConfig = Field(default_factory=RedisConfig)
     app: AppConfig = Field(default_factory=AppConfig)
     rabbitmq: RabbitMQSettings = Field(default_factory=RabbitMQSettings)
     smtp: SMTPSettings = Field(default_factory=SMTPSettings)
