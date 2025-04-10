@@ -26,5 +26,6 @@ class Article(Base):
     author_id: Mapped[str] = mapped_column(ForeignKey("users.id"))
     created_at: Mapped[datetime] = mapped_column(default=datetime.now)
     updated_at: Mapped[datetime] = mapped_column(default=datetime.now, onupdate=datetime.now)
+    deleted: Mapped[bool] = mapped_column(default=False)
 
     categories = relationship("Category", secondary=article_category, backref="articles")
