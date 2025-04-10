@@ -1,7 +1,6 @@
 import os
 import sys
 
-# Добавим корень проекта в PYTHONPATH
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from celery import Celery
@@ -15,7 +14,5 @@ celery_app = Celery(
 )
 
 celery_app.conf.task_routes = {
-    "app.tasks.email.send_email_task": {"queue": "email"},
+    "app.tasks.email.send_registration_email": {"queue": "email"},
 }
-
-print("[CELERY] Celery worker initialized with RabbitMQ")
