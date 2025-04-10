@@ -24,7 +24,7 @@ class Article(Base):
     content: Mapped[str]
     image: Mapped[str | None]
     author_id: Mapped[str] = mapped_column(ForeignKey("users.id"))
-    created_at: Mapped[datetime] = mapped_column(default=datetime.utcnow)
-    updated_at: Mapped[datetime] = mapped_column(default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(default=datetime.now)
+    updated_at: Mapped[datetime] = mapped_column(default=datetime.now, onupdate=datetime.now)
 
     categories = relationship("Category", secondary=article_category, backref="articles")
