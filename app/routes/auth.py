@@ -2,9 +2,9 @@ from fastapi import APIRouter, Depends, Request, Response
 from fastapi.responses import JSONResponse
 
 from app.core.config import config
-from app.dependencies import get_user_service
+from app.dependencies import get_token_service, get_user_service
 from app.schemas.user import UserCreate, UserLogin, UserRead, UserUpdate
-from app.services.token import TokenService, get_token_service
+from app.services.token import TokenService
 from app.services.user import UserService
 
 router = APIRouter(prefix='/auth', tags=['Auth'])
