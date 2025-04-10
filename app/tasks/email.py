@@ -4,7 +4,7 @@ from email.message import EmailMessage
 from aiosmtplib import send
 
 from app.celery_worker import celery_app
-from app.core.config_file import config
+from app.core.config import config
 
 
 @celery_app.task(name="app.tasks.email.send_email_task")

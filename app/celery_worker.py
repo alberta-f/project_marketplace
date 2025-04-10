@@ -6,7 +6,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from celery import Celery
 
-from app.core.config_file import config
+from app.core.config import config
 
 celery_app = Celery(
     'worker',

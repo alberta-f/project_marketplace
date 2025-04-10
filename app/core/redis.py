@@ -1,6 +1,6 @@
 from redis.asyncio import Redis
 
-from app.core.config_file import config
+from app.core.config import config
 
 redis_ = Redis.from_url(url=config.redis.url,
                        encoding='utf8',

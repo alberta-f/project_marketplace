@@ -2,7 +2,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import User
-from app.repo.db_base import DBRepository
+from app.repository.db_base import DBRepository
 
 
 class UserRepository(DBRepository[User]):

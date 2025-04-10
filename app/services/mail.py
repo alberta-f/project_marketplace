@@ -1,4 +1,4 @@
-from app.core.config_file import config
+from app.core.config import config
 from app.tasks.email import send_email_task
 
 
