@@ -16,5 +16,6 @@ class CategoryRepository(DBRepository[Category]):
         return result.scalar_one_or_none()
 
 
-    async def get_all_categories(self):
-        return await self.db.scalars(select(Category))
+    async def get_categories_by_ids(self, ids):
+        result = await self.db.scalars(select(Category).where(Category.id.in_(ids)))
+        return result.all()
