@@ -12,7 +12,3 @@ class SecurityService:
 
     def verify_password(self, plain:str, hashed: str) -> bool:
         return self.pwd_context.verify(plain, hashed)
-
-
-def get_security_service():
-    return SecurityService()

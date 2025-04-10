@@ -6,7 +6,3 @@ class MailService:
         subject = "Registration"
         body = "Thanks for registration"
         send_email_task.delay(email, subject, body)
-
-
-def get_mail_service():
-    return MailService()

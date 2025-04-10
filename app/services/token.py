@@ -39,7 +39,3 @@ class TokenService:
 
         except JWTError:
             raise NotAuthenticatedException()
-
-
-def get_token_service():
-    return TokenService()

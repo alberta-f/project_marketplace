@@ -46,6 +46,7 @@ class UserService:
         user = request.state.user
         if not user:
             raise NotAuthenticatedException()
+
         return user
 
 
