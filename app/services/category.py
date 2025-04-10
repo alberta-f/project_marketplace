@@ -27,7 +27,7 @@ class CategoryService:
         return category
 
     async def list(self):
-        return await self.category_repository.get_all_categories()
+        return await self.category_repository.get_all()
 
     async def delete(self, category_id):
         category = await self.category_repository.get_by_id(category_id)
