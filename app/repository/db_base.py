@@ -25,5 +25,5 @@ class DBRepository(Generic[ModelType]):
         await self.db.commit()
 
     async def update(self, obj: ModelType):
-        await self.db.add(obj)
+        self.db.add(obj)
         await self.db.commit()
