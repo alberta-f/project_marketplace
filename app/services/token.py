@@ -10,7 +10,7 @@ from app.exceptions.user import NotAuthenticatedException
 class TokenService:
     @staticmethod
     def create_access_token(user_id: UUID) -> str:
-        expire = datetime.utcnow() + timedelta(minutes=30)
+        expire = datetime.now() + timedelta(minutes=config.jwt.single_use_expire_mins)
         payload = {
             "sub": str(user_id),
             "exp": expire,
@@ -29,9 +29,17 @@ class TokenService:
                 config.jwt.secret_key,
                 algorithms=[config.jwt.algorithm]
             )
+
             user_id = payload.get("sub")
+
             if not user_id:
                 raise NotAuthenticatedException()
+
             return UUID(user_id)
+
         except JWTError:
             raise NotAuthenticatedException()
+
+
+def get_token_service():
+    return TokenService()
