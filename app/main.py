@@ -4,14 +4,16 @@ from fastapi.responses import JSONResponse
 
 from app.exceptions.base import AppException
 from app.middlewares.auth import AuthMiddleware
-from app.routes.auth import router
+from app.routes.auth import router as auth_router
+from app.routes.category import router as category_router
 
 middleware = [
     Middleware(AuthMiddleware)
 ]
 app = FastAPI(title='Marketplace blog', middleware=middleware)
 
-app.include_router(router)
+app.include_router(auth_router)
+app.include_router(category_router)
 
 
 @app.exception_handler(AppException)
