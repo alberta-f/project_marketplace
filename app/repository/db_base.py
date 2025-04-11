@@ -27,6 +27,7 @@ class DBRepository(Generic[ModelType]):
     async def update(self, obj: ModelType):
         self.db.add(obj)
         await self.db.commit()
+        await self.db.refresh(obj)
 
     async def get_all(self):
         result = await self.db.scalars(select(self.model))

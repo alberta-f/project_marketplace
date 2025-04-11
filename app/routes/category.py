@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, Request, Response
 
-from app.dependencies import get_category_service, get_user_service
+from app.dependencies import get_category_service
+from app.routes.utils.cookie import get_user_from_cookie
 from app.schemas.category import CategoryCreate, CategoryRead
 from app.services.category import CategoryService
-from app.services.user import UserService
 
 router = APIRouter(prefix='/category', tags=['Category'])
 
@@ -12,10 +12,9 @@ router = APIRouter(prefix='/category', tags=['Category'])
 async def create_category(
     request: Request,
     data: CategoryCreate,
-    user_service: UserService = Depends(get_user_service),
     category_service: CategoryService = Depends(get_category_service),
 ):
-    await user_service.get_user_from_cookie(request)
+    get_user_from_cookie(request)
 
     category = await category_service.create(data)
     return category
@@ -39,10 +38,9 @@ async def get_category(
 async def delete_category(
     request: Request,
     category_id,
-    user_service: UserService = Depends(get_user_service),
     category_service: CategoryService = Depends(get_category_service),
 ):
-    await user_service.get_user_from_cookie(request)
+    get_user_from_cookie(request)
 
     await category_service.delete(category_id)
     return Response(status_code=204, content="User deleted successfully")

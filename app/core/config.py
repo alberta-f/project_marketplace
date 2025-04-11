@@ -19,10 +19,12 @@ class DatabaseConfig(BaseConfig):
 
 
 class MinioConfig(BaseConfig):
-    access_key: str = Field(..., alias="MINIO_ROOT_USER")
-    secret_key: SecretStr = Field(..., alias="MINIO_ROOT_PASSWORD")
+    root_user: str = Field(..., alias="MINIO_ROOT_USER")
+    root_password: SecretStr = Field(..., alias="MINIO_ROOT_PASSWORD")
+    access_key: str = Field(..., alias="MINIO_ACCESS_KEY")
+    secret_key: SecretStr = Field(..., alias="MINIO_SECRET_KEY")
     endpoint: str = Field(..., alias="MINIO_ENDPOINT")
-    bucket: str = Field("marketplace", alias="S3_BUCKET")
+    bucket: str = Field(..., alias="S3_BUCKET")
 
 
 class SessionConfig(BaseConfig):
@@ -33,7 +35,7 @@ class JWTConfig(BaseConfig):
     secret_key: str = Field(..., alias='JWT_SECRET_KEY')
     algorithm: str = Field(..., alias='JWT_ALGORITHM')
     single_use_expire_mins: int = Field(...,
-                                    alias='JWT_SINGLE_USE_TOKEN_EXPIRE_MINS')
+                                    alias='JWT_EXPIRE_MINS')
 
 
 class AppConfig(BaseConfig):

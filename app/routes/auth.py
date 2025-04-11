@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, Request, Response
 from fastapi.responses import JSONResponse
 
-from app.core.config import config
 from app.dependencies import get_token_service, get_user_service
+from app.routes.utils.cookie import get_user_from_cookie, set_token_to_cookie
 from app.schemas.user import UserCreate, UserLogin, UserRead, UserUpdate
 from app.services.token import TokenService
 from app.services.user import UserService
@@ -29,13 +29,8 @@ async def login(
     user = await user_service.login_user(data)
 
     token = token_service.create_access_token(user.id)
-    response.set_cookie(
-        key=config.session.cookie_name,
-        value=token,
-        httponly=True,
-        secure=False,  # True на проде
-        samesite="lax",
-    )
+    set_token_to_cookie(response, token)
+
     return {"message": "Login successful"}
 
 
@@ -52,21 +47,14 @@ async def logout_user(
     response.delete_cookie("access_token")
     return response
 
-@router.get('/me')
+@router.get('/me', response_model=UserRead)
 async def get_me(request: Request,
                  response: Response,
-                 user_service: UserService = Depends(get_user_service),
                  token_service: TokenService = Depends(get_token_service)):
-    user = await user_service.get_user_from_cookie(request)
+    user = get_user_from_cookie(request)
 
     token = token_service.create_access_token(user.id)
-    response.set_cookie(
-        key=config.session.cookie_name,
-        value=token,
-        httponly=True,
-        secure=False,  # True на проде
-        samesite="lax",
-    )
+    set_token_to_cookie(response, token)
 
     return user
 
@@ -76,7 +64,7 @@ async def put_me(request: Request,
                  data: UserUpdate,
                  user_service: UserService = Depends(get_user_service),
                  ):
-    user = await user_service.get_user_from_cookie(request)
+    user = get_user_from_cookie(request)
 
     await user_service.update_user(user, data)
     return Response(status_code=204, content='User updated successfully')
@@ -86,7 +74,7 @@ async def put_me(request: Request,
 async def delete_user(request: Request,
                       user_service: UserService = Depends(get_user_service)
 ):
-    user = await user_service.get_user_from_cookie(request)
+    user = get_user_from_cookie(request)
 
     await user_service.delete_user(user)
     return Response(status_code=204, content="User deleted successfully")

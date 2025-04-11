@@ -32,3 +32,7 @@ class CategoryService:
     async def delete(self, category_id):
         category = await self.category_repository.get_by_id(category_id)
         await self.category_repository.delete(category)
+
+    async def get_many_by_ids(self, ids):
+        categories = await self.category_repository.get_categories_by_ids(ids)
+        return categories

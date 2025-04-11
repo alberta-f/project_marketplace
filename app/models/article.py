@@ -20,7 +20,7 @@ class Article(Base):
     __tablename__ = "articles"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    title: Mapped[str] = mapped_column(String(200), unique=True)
+    title: Mapped[str] = mapped_column(String(200))
     content: Mapped[str]
     image: Mapped[str | None]
     author_id: Mapped[str] = mapped_column(ForeignKey("users.id"))
@@ -28,4 +28,11 @@ class Article(Base):
     updated_at: Mapped[datetime] = mapped_column(default=datetime.now, onupdate=datetime.now)
     deleted: Mapped[bool] = mapped_column(default=False)
 
-    categories = relationship("Category", secondary=article_category, backref="articles")
+    categories = relationship("Category",
+                              secondary=article_category,
+                              backref="articles",
+                              lazy="selectin")
+
+    @property
+    def category_ids(self) -> list[UUID]:
+        return [category.id for category in self.categories]

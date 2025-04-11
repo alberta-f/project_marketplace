@@ -1,9 +1,7 @@
-from fastapi import Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.exceptions.user import (
     InvalidCredentialsException,
-    NotAuthenticatedException,
     UserAlreadyExistsException,
 )
 from app.models.user import User
@@ -40,13 +38,6 @@ class UserService:
         user = await self.user_repository.get_by_email(data.email)
         if not user or not self.security.verify_password(data.password, user.hashed_password):
             raise InvalidCredentialsException()
-        return user
-
-    async def get_user_from_cookie(self, request: Request) -> User:
-        user = request.state.user
-        if not user:
-            raise NotAuthenticatedException()
-
         return user
 
 

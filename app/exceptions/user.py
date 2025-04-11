@@ -12,3 +12,7 @@ class InvalidCredentialsException(AppException):
 class NotAuthenticatedException(AppException):
     status_code = 401
     detail = "Not authenticated"
+
+class NotRootException(AppException):
+    status_code = 401
+    detail = 'No root'

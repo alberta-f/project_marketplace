@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 from uuid import UUID
 
+from fastapi import Response
 from jose import JWTError, jwt
 
 from app.core.config import config
@@ -39,3 +40,15 @@ class TokenService:
 
         except JWTError:
             raise NotAuthenticatedException()
+
+
+    @staticmethod
+    def set_cookie(self, response: Response, user_id: UUID):
+        token = self.create_access_token(user_id)
+        response.set_cookie(
+            key=config.session.cookie_name,
+            value=token,
+            httponly=True,
+            secure=False,
+            samesite="lax",
+        )
