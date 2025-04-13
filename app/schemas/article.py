@@ -9,14 +9,14 @@ from pydantic import BaseModel
 class ArticleCreate(BaseModel):
     title: str
     content: str
-    category_ids: List[UUID]
+    category_ids: List[str]
 
     @classmethod
     def as_form(
         cls,
         title: str = Form(...),
         content: str = Form(...),
-        category_ids: List[UUID] = Form(...),
+        category_ids: List[str] = Form([]),
     ):
         return cls(
             title=title,
@@ -29,14 +29,14 @@ class ArticleCreate(BaseModel):
 class ArticleUpdate(BaseModel):
     title: str
     content: str
-    category_ids: List[UUID]
+    category_ids: List[str]
 
     @classmethod
     def as_form(
         cls,
         title: str = Form(...),
         content: str = Form(...),
-        category_ids: List[UUID] = Form(...),
+        category_ids: List[str] = Form([]),
     ):
         return cls(
             title=title,

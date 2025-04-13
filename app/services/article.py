@@ -27,11 +27,12 @@ class ArticleService:
         data: ArticleCreate,
         author_id: UUID,
         image_bytes: bytes | None,
-        filename: str | None = None,
     ) -> Article:
         image_url = None
-        if image_bytes and filename:
-            image_url = self.minio_service.upload_image(image_bytes, filename)
+        if image_bytes:
+            image_url = self.minio_service.upload_image(image_bytes)
+
+        data.category_ids = [UUID(category) for category in data.category_ids if category != '']
 
         article = Article(
             title=data.title,
@@ -63,8 +64,9 @@ class ArticleService:
         data: ArticleUpdate,
         user_id: UUID,
         image_bytes: bytes | None = None,
-        filename: str | None = None,
     ) -> Article:
+        data.category_ids = [UUID(category) for category in data.category_ids if category != '']
+
         article = await self.article_repository.get_by_id(article_id)
 
         if article.author_id == user_id:
@@ -74,18 +76,29 @@ class ArticleService:
         article.content = data.content
         article.categories = await self.category_service.get_many_by_ids(data.category_ids)
 
-        if image_bytes and filename:
-            article.image = self.minio_service.upload_image(image_bytes, filename)
+        if image_bytes:
+            article.image = self.minio_service.upload_image(image_bytes)
 
         await self.article_repository.update(article)
         return article
 
 
     async def delete(self, article_id: UUID, user_id: UUID) -> None:
-        article = await self.article_repository.get_by_id(article_id)
+        article = await self.get(article_id)
 
         if article.author_id == user_id:
-            await self.article_repository.soft_delete(article)
+            await self.article_repository.delete(article)
 
         else:
             raise NotRootException()
+
+    async def get_articles_by_user_id(self, user_id: UUID):
+        return await self.article_repository.get_articles_by_user_id(user_id)
+
+
+    async def list_paginated(self,
+                             search: str | None,
+                             category_id: UUID | None,
+                             page: int,
+                             size: int):
+        return await self.article_repository.get_paginated(search, category_id, page, size)

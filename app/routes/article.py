@@ -1,10 +1,9 @@
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, File, Request, UploadFile
+from fastapi import APIRouter, Depends, File, Query, Request
 
 from app.dependencies import get_article_service
 from app.routes.utils.cookie import get_user_from_cookie
-from app.routes.utils.files import get_optional_file, read_optional_file
 from app.schemas.article import ArticleCreate, ArticleRead, ArticleUpdate
 from app.services.article import ArticleService
 
@@ -15,21 +14,23 @@ router = APIRouter(prefix="/article", tags=["Article"])
 async def create_article(
     request: Request,
     data: ArticleCreate = Depends(ArticleCreate.as_form),
-    image: UploadFile = File(None),
+    image_bytes: bytes = File(None),
     article_service: ArticleService = Depends(get_article_service),
 ):
     user = get_user_from_cookie(request)
 
-    image_bytes, filename = await read_optional_file(image)
-
-    return await article_service.create(data, user.id, image_bytes, filename)
+    return await article_service.create(data, user.id, image_bytes)
 
 
-@router.get("/all", response_model=list[ArticleRead])
+@router.get("/", response_model=list[ArticleRead])
 async def list_articles(
-    article_service: ArticleService=Depends(get_article_service),
+    search: str | None = Query(None),
+    category_id: UUID | None = Query(None),
+    page_number: int = Query(1, ge=1),
+    page_size: int = Query(10, le=100),
+    article_service: ArticleService = Depends(get_article_service),
 ):
-    return await article_service.list()
+    return await article_service.list_paginated(search, category_id, page_number, page_size)
 
 
 @router.get("/{article_id}", response_model=ArticleRead)
@@ -40,25 +41,39 @@ async def get_article(
     return await article_service.get(article_id)
 
 
+@router.get("/users/me", response_model=list[ArticleRead])
+async def current_user_articles(
+    request: Request,
+    article_service: ArticleService = Depends(get_article_service)
+):
+    user = get_user_from_cookie(request)
+    return await article_service.get_articles_by_user_id(user.id)
+
+
+@router.get("/users/{user_id}", response_model=list[ArticleRead])
+async def user_articles(
+    user_id: UUID,
+    article_service: ArticleService = Depends(get_article_service),
+):
+    return await article_service.get_articles_by_user_id(user_id)
+
+
+
+
 @router.put("/{article_id}", response_model=ArticleRead)
 async def update_article(
     request: Request,
     article_id: UUID,
     data: ArticleUpdate = Depends(ArticleUpdate.as_form),
-    image: UploadFile = File(None),
+    image_bytes: bytes = File(None),
     article_service: ArticleService = Depends(get_article_service),
 ):
     user = get_user_from_cookie(request)
 
-    image = await get_optional_file(image)
-
-    image_bytes, filename = await read_optional_file(image)
     return await article_service.update(article_id=article_id,
                                         data=data,
                                         user_id=user.id,
-                                        image_bytes=image_bytes,
-                                        filename=filename)
-
+                                        image_bytes=image_bytes,)
 
 @router.delete("/{article_id}", status_code=204)
 async def delete_article(

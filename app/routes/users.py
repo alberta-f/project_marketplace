@@ -7,7 +7,7 @@ from app.schemas.user import UserCreate, UserLogin, UserRead, UserUpdate
 from app.services.token import TokenService
 from app.services.user import UserService
 
-router = APIRouter(prefix='/auth', tags=['Auth'])
+router = APIRouter(prefix='/users', tags=['Users'])
 
 
 @router.post("/register", response_model=UserRead)
@@ -78,3 +78,8 @@ async def delete_user(request: Request,
 
     await user_service.delete_user(user)
     return Response(status_code=204, content="User deleted successfully")
+
+
+@router.get('/all', response_model=list[UserRead])
+async def get_all_users(user_service: UserService=Depends(get_user_service)):
+    return await user_service.get_all()

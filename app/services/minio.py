@@ -21,15 +21,15 @@ class MinioService:
             )
         return self.client
 
-    def upload_image(self, file_data: bytes, filename: str, content_type: str = "image/jpeg"):
-        unique_name = f"{uuid4()}_{filename}"
+    def upload_image(self, file_data: bytes, content_type: str = "image/jpeg"):
+        filename = f'{uuid4()}.jpg'
 
         client = self._get_boto3_client()
         client.put_object(
             Bucket=self.bucket,
-            Key=unique_name,
+            Key=filename,
             Body=file_data,
             ContentType=content_type,
         )
 
-        return f"http://{self.endpoint}/{self.bucket}/{unique_name}"
+        return f"http://{self.endpoint}/{self.bucket}/{filename}"

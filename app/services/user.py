@@ -54,3 +54,6 @@ class UserService:
 
     async def delete_user(self, user: User):
         return await self.user_repository.delete(user)
+
+    async def get_all(self):
+        return await self.user_repository.get_all()
