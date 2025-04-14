@@ -1,99 +1,65 @@
-import os
-import sys
-
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-
-
 import pytest
-from httpx import ASGITransport, AsyncClient
-from sqlalchemy import update
+from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
-from app import tasks
+from app.core.database import Base
 from app.main import app
-from app.models.base import Base
-from app.models.models import User
-from app.services import jwt
-from app.services.db import get_db_session
 
-# ⚠️ Новый движок SQLite (in-memory)
-TEST_DB_URL = "sqlite+aiosqlite:///:memory:"
+DATABASE_URL='postgresql+asyncpg://test_user:test_pass@postgres_test:5432/test_db'
 
-engine_test = create_async_engine(TEST_DB_URL, echo=True)
-async_session_test_ = async_sessionmaker(engine_test, expire_on_commit=False)
-
-# ⚡ Переопределим зависимость
-app.dependency_overrides[get_db_session] = lambda: async_session_test()
+engine = create_async_engine(DATABASE_URL, echo=False)
+test_session_maker = async_sessionmaker(engine, expire_on_commit=False)
 
 
-@pytest.fixture(scope='session')
-def async_session_test():
-    return async_session_test_
-
-
-@pytest.fixture(scope='session', autouse=True)
-async def prepare_database():
-    async with engine_test.begin() as conn:
+@pytest.fixture(scope="session", autouse=True)
+async def initialize_database():
+    async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
+@pytest.fixture(autouse=True)
+async def clean_database():
+    async with test_session_maker() as session:
+        for table in reversed(Base.metadata.sorted_tables):
+            await session.execute(table.delete())
+        await session.commit()
 
 @pytest.fixture(autouse=True)
-def mock_tasks(monkeypatch):
-    class FakeTask:
-        def delay(self, *args, **kwargs):
-            pass
+def mock_minio(monkeypatch):
+    def fake_upload_image(self, *args, **kwargs):
+        return "https://fake-bucket.test/fake-image.jpg"
 
-    monkeypatch.setattr(tasks.email, "send_email_task", FakeTask())
+    monkeypatch.setattr("app.services.article.MinioService.upload_image", fake_upload_image)
 
 
 @pytest.fixture(autouse=True)
-def mock_redis(monkeypatch):
-    async def fake_store_token(*args, **kwargs):
+def mock_email_task(monkeypatch):
+    def fake_delay(self, *args, **kwargs):
         pass
+    monkeypatch.setattr("app.tasks.email.send_email_task.delay", fake_delay())
 
-    async def fake_delete_token(*args, **kwargs):
-        pass
-
-    async def fake_delete_all_user_access_tokens(*args, **kwargs):
-        pass
-
-    monkeypatch.setattr(jwt, "store_token", fake_store_token)
-    monkeypatch.setattr(jwt, "delete_token", fake_delete_token)
-    monkeypatch.setattr(jwt, "delete_all_user_access_tokens", fake_delete_all_user_access_tokens)
-
-
-@pytest.fixture
+@pytest.fixture()
 async def async_client():
-    async with AsyncClient(
-        base_url="http://test",
-        transport=ASGITransport(app=app)  # 💡 это ключ
-    ) as client:
+    async with AsyncClient(app=app, base_url="http://test") as client:
         yield client
 
-
-@pytest.fixture
-async def inactive_user(async_client):
+@pytest.fixture()
+async def test_user(async_client):
     data = {
-        "email": "inactive@example.com",
-        "username": "inactive_user",
-        "password": "testpass123"
+        "email": "testuser@example.com",
+        "password": "password123",
+        "username": "Testy Tester"
     }
-    await async_client.post("/auth/register", json=data)
+    response = await async_client.post("/users/register", json=data)
+    assert response.status_code == 201
     return data
 
-@pytest.fixture
-async def active_user(async_client, async_session_test):
-    data = {
-        "email": "active@example.com",
-        "username": "active_user",
-        "password": "testpass123"
-    }
-    await async_client.post("/auth/register", json=data)
-
-    # Активируем через БД
-    await async_session_test.execute(
-        update(User).where(User.email == data["email"]).values(is_active=True)
-    )
-    await async_session_test.commit()
-
-    return data
+@pytest.fixture()
+async def authenticated_client(test_user):
+    async with AsyncClient(app=app, base_url="http://test") as client:
+        response = await client.post("/users/login", data={
+            "email": test_user["email"],
+            "password": test_user["password"]
+        })
+        assert response.status_code == 200
+        client.cookies = response.cookies
+        yield client

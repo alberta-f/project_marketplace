@@ -12,14 +12,14 @@ services:
     volumes:
       - .:/app
     depends_on:
-      - db
+      - postgres
       - minio
       - rabbitmq
     env_file:
       - .env
 
-  db:
-    image: postgres:15
+  postgres:
+    image: postgres:17
     container_name: postgres
     restart: always
     environment:
@@ -72,7 +72,7 @@ services:
     command: poetry run celery -A app.celery_worker.celery_app worker --loglevel=info -Q email
     depends_on:
       - rabbitmq
-      - db
+      - postgres
     volumes:
       - .:/app
     env_file:

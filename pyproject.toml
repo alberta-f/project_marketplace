@@ -22,7 +22,8 @@ dependencies = [
     "redis (>=5.2.1,<6.0.0)",
     "celery (>=5.4.0,<6.0.0)",
     "aiosmtplib (>=4.0.0,<5.0.0)",
-    "aiosqlite (>=0.21.0,<0.22.0)"
+    "aiosqlite (>=0.21.0,<0.22.0)",
+    "httpx (>=0.28.1,<0.29.0)",
 ]
 
 
@@ -38,6 +39,7 @@ alembic = "^1.15.2"
 mypy = "^1.15.0"
 httpx = "^0.28.1"
 pytest-asyncio = "^0.26.0"
+pytest-trio = "^0.8.0"
 
 
 [tool.ruff]
@@ -52,8 +54,3 @@ select = ["E", "F", "I"]
 [tool.ruff.format]
 quote-style = "double"
 indent-style = "space"
-
-
-[[tool.mypy.overrides]]
-module = "alembic.*"
-ignore_missing_imports = true
