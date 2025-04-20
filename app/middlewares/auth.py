@@ -28,5 +28,8 @@ class AuthMiddleware(BaseHTTPMiddleware):
         except NotAuthenticatedException:
             request.state.user = None
 
+        except Exception:
+            request.state.user = None
+
         response = await call_next(request)
         return response

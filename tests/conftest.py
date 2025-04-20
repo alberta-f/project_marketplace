@@ -1,65 +1,66 @@
 import pytest
-from httpx import AsyncClient
+from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
-from app.core.database import Base
+from app.core.database import get_db
 from app.main import app
+from app.models import Base
+from app.services.minio import MinioService
+from app.tasks.email import send_email_task
 
-DATABASE_URL='postgresql+asyncpg://test_user:test_pass@postgres_test:5432/test_db'
+DATABASE_URL = 'postgresql+asyncpg://test_user:test_pass@postgres_test:5432/test_db'
+
 
 engine = create_async_engine(DATABASE_URL, echo=False)
-test_session_maker = async_sessionmaker(engine, expire_on_commit=False)
+SessionTest = async_sessionmaker(engine, expire_on_commit=False)
 
 
-@pytest.fixture(scope="session", autouse=True)
-async def initialize_database():
+@pytest.fixture(scope='session', autouse=True)
+async def setup_test_db():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
-@pytest.fixture(autouse=True)
-async def clean_database():
-    async with test_session_maker() as session:
-        for table in reversed(Base.metadata.sorted_tables):
-            await session.execute(table.delete())
-        await session.commit()
+    yield
 
-@pytest.fixture(autouse=True)
-def mock_minio(monkeypatch):
-    def fake_upload_image(self, *args, **kwargs):
-        return "https://fake-bucket.test/fake-image.jpg"
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.drop_all)
 
-    monkeypatch.setattr("app.services.article.MinioService.upload_image", fake_upload_image)
-
-
-@pytest.fixture(autouse=True)
-def mock_email_task(monkeypatch):
-    def fake_delay(self, *args, **kwargs):
-        pass
-    monkeypatch.setattr("app.tasks.email.send_email_task.delay", fake_delay())
 
 @pytest.fixture()
-async def async_client():
-    async with AsyncClient(app=app, base_url="http://test") as client:
-        yield client
+async def session():
+    async with SessionTest() as session:
+        yield session
 
-@pytest.fixture()
-async def test_user(async_client):
+
+@pytest.fixture
+async def client(session):
+    async def override_get_db():
+        yield session
+
+    app.dependency_overrides[get_db] = override_get_db
+
+    async with AsyncClient(transport=ASGITransport(app=app), base_url='http://test') as c:
+        yield c
+
+
+@pytest.fixture(autouse=True)
+def override_celery_task(monkeypatch):
+    monkeypatch.setattr(send_email_task, 'delay', lambda *args, **kwargs: None)
+
+
+@pytest.fixture(autouse=True)
+def override_upload_image(monkeypatch):
+    monkeypatch.setattr(MinioService, 'upload_image', lambda *args, **kwargs: None)
+
+
+@pytest.fixture
+async def test_user(client):
     data = {
-        "email": "testuser@example.com",
-        "password": "password123",
-        "username": "Testy Tester"
+        'email': 'testuser@example.com',
+        'password': 'password123',
+        'username': 'tester'
     }
-    response = await async_client.post("/users/register", json=data)
-    assert response.status_code == 201
-    return data
 
-@pytest.fixture()
-async def authenticated_client(test_user):
-    async with AsyncClient(app=app, base_url="http://test") as client:
-        response = await client.post("/users/login", data={
-            "email": test_user["email"],
-            "password": test_user["password"]
-        })
-        assert response.status_code == 200
-        client.cookies = response.cookies
-        yield client
+    response = await client.post('user/register', json=data)
+    await response.status_code == 201
+    return data
