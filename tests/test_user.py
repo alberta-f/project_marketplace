@@ -1,8 +1,6 @@
-import pytest
 
 
-@pytest.fixture
-async def test_user(client):
+async def test_register(client):
     data = {
         'email': 'testuser@example.com',
         'password': 'password123',
@@ -12,6 +10,3 @@ async def test_user(client):
     response = await client.post('/user/register', data=data)
     assert response.status_code == 201
     return data
-
-def test(test_user):
-    pass
