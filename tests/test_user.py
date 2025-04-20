@@ -9,9 +9,9 @@ async def test_user(client):
         'username': 'tester'
     }
 
-    response = await client.post('user/register', json=data)
+    response = await client.post('/user/register', data=data)
     assert response.status_code == 201
     return data
 
 def test(test_user):
-    print(test_user['email'])
+    pass

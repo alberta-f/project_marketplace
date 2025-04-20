@@ -51,16 +51,3 @@ def override_celery_task(monkeypatch):
 @pytest.fixture(autouse=True)
 def override_upload_image(monkeypatch):
     monkeypatch.setattr(MinioService, 'upload_image', lambda *args, **kwargs: None)
-
-
-@pytest.fixture
-async def test_user(client):
-    data = {
-        'email': 'testuser@example.com',
-        'password': 'password123',
-        'username': 'tester'
-    }
-
-    response = await client.post('user/register', json=data)
-    await response.status_code == 201
-    return data
