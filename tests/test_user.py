@@ -5,21 +5,31 @@ from app.core.config import config
 from app.main import app
 
 
-@pytest.mark.asyncio
-async def test_register():
-    async with AsyncClient(transport=ASGITransport(app=app), base_url='http://test') as client:
-        data = {
-            'email': 'testuser@example.com',
-            'username': 'tester',
-            'password': 'password123',
-        }
+async def _auth_client():
+    client = AsyncClient(transport=ASGITransport(app=app), base_url='http://test')
+    data = {
+        'email': 'testuser@example.com',
+        'username': 'tester',
+        'password': 'password123',
+    }
 
-        response = await client.post('/users/register', json=data)
-        assert response.status_code == 200
-        resp_data = response.json()
-        assert 'id' in resp_data
-        assert resp_data['email'] == 'testuser@example.com'
-        return resp_data
+    response = await client.post('/users/register', json=data)
+    assert response.status_code == 200
+    resp_data = response.json()
+    assert 'id' in resp_data
+    assert resp_data['email'] == 'testuser@example.com'
+
+    data = {
+        'email': 'testuser@example.com',
+        'password': 'password123',
+    }
+
+    response = await client.post('/users/auth', json=data)
+    assert response.status_code == 200
+
+    response = await client.post('/users/me')
+    assert response.status_code == 200
+    return client
 
 
 @pytest.mark.asyncio
@@ -87,3 +97,9 @@ async def test_me():
 
         response_2 = await client.get('/users/me')
         assert response_2.json() == {}
+
+@pytest.mark.asyncio
+async def test_logout():
+    async with AsyncClient(transport=ASGITransport(app=app), base_url='http://test') as client:
+        response = await client.post('users/logout')
+        assert config.session.cookie_name not in response.cookies
