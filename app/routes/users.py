@@ -31,7 +31,7 @@ async def login(
     token = token_service.create_access_token(user.id)
     set_token_to_cookie(response, token)
 
-    return {"message": "Login successful"}
+    return {"message": "Login successful", "user_id": user.id}
 
 
 @router.post("/logout")

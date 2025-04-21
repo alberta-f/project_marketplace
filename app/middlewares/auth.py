@@ -2,7 +2,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import Response
 
 from app.core.config import config
-from app.core.database import async_session_maker
+from app.core.database import get_db
 from app.dependencies import get_token_service
 from app.exceptions.user import NotAuthenticatedException
 from app.repository.user import UserRepository
@@ -18,7 +18,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
             user_id = token_service.decode_access_token(token)
 
             if user_id:
-                async with async_session_maker() as session:
+                async for session in get_db():
                     repo = UserRepository(session)
                     user = await repo.get_by_id(user_id)
 
@@ -29,7 +29,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
             request.state.user = None
 
         except Exception:
-            request.state.user = None
+            pass
 
         response = await call_next(request)
         return response

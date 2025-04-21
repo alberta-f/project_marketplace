@@ -8,7 +8,8 @@ def set_token_to_cookie(response: Response, token):
     response.set_cookie(
         key=config.session.cookie_name,
         value=token,
-        httponly=True,
+        path="/",
+        httponly=False,
         secure=False,  # True на проде
         samesite="lax",
     )

@@ -34,22 +34,14 @@ makemigrations:
 	docker-compose exec backend alembic revision --autogenerate -m "New migration"
 
 # ==== TESTING ====
-test-up:
-	docker-compose -f docker-compose.yaml -f docker-compose.test.yaml up -d --build postgres_test
-
-test-build:
-	docker-compose -f docker-compose.yaml -f docker-compose.test.yaml build test_runner
-
-test-run:
-	docker-compose -f docker-compose.yaml -f docker-compose.test.yaml run --rm test_runner
-
-test:	test-up test-build
-	@echo "⏳ Waiting for postgres_test to warm up..."
-	sleep 3
-	make test-run
-
 test-down:
-	docker-compose -f docker-compose.yaml -f docker-compose.test.yaml down -v
+	docker-compose -f docker-compose.test.yaml down -v
+
+test-up:
+	docker-compose -f docker-compose.test.yaml up --build --abort-on-container-exit
+
+test-restart:	test-down test-up
+
 
 test-shell:
 	docker-compose -f docker-compose.yaml -f docker-compose.test.yaml run --rm test_runner bash

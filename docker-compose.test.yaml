@@ -7,11 +7,11 @@ services:
     command: poetry run pytest tests -v -s
     depends_on:
       - postgres_test
-    env_file:
-      - .env
     environment:
       - PYTHONPATH=/app
       - DATABASE_URL=postgresql+asyncpg://test_user:test_pass@postgres_test:5432/test_db
+    env_file:
+      - .env
     volumes:
       - .:/app
 

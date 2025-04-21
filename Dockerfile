@@ -9,8 +9,8 @@ COPY pyproject.toml poetry.lock* /app/
 RUN poetry config virtualenvs.create false \
   && poetry install --no-root --with dev
 
-COPY . .
-ENV PYTHONPATH=/app
+COPY . /app
+# ENV PYTHONPATH=/app
 
 EXPOSE 8000
 

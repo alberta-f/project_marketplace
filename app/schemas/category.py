@@ -12,4 +12,4 @@ class CategoryRead(BaseModel):
     name: str
 
     class Config:
-        orm_node = True
+        from_attributes = True
