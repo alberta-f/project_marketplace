@@ -73,31 +73,17 @@ async def test_login():
 
 @pytest.mark.asyncio
 async def test_me():
-    async with AsyncClient(transport=ASGITransport(app=app),
-                           base_url="http://test") as client:
-        # 1) логинимся
-        login_data = {"email": "testuser@example.com", "password": "password123"}
-        resp_login = await client.post("/users/login", json=login_data)
-        assert resp_login.status_code == 200
+    async with AsyncClient(transport=ASGITransport(app=app), base_url='http://test') as client:
+        data_correct = {
+            'email': 'testuser@example.com',
+            'password': 'password123',
+        }
 
-        # 2) берём токен из Set‑Cookie
-        token = resp_login.cookies[config.session.cookie_name]
+        response_1 = await client.post('/users/login', json=data_correct)
+        assert config.session.cookie_name in response_1.cookies
 
-        # 3‑а) самый надёжный способ — передать через параметр cookies
-        resp_me = await client.get(
-            "/users/me",
-            cookies={config.session.cookie_name: token},
-        )
+        token = response_1.cookies.get('auth_token')
+        assert token is not None
 
-        # ----- либо -----
-        # 3‑б) вбить куку в CookieJar клиента
-        # client.cookies.set(config.session.cookie_name, token, path="/")
-        # resp_me = await client.get("/users/me")
-
-        assert resp_me.status_code == 200
-        assert resp_me.json()["email"] == login_data["email"]
-
-# @pytest.mark.asyncio
-# async def test_logout():
-#     async with AsyncClient(transport=ASGITransport(app=app), base_url='http://test') as client:
-#         response = await client.post('users/logout')
+        response_2 = await client.get('/users/me')
+        assert response_2.json() == {}

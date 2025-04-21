@@ -1,52 +1,70 @@
-# ==== CONFIG ====
-ENV_FILE=.env
-ENV_TEST_FILE=.env.test
+# =====================================================================
+#  CONFIG
+# =====================================================================
+COMPOSE          ?= docker-compose          # ← v2 (у alias docker‑compose тоже сработает)
+ENV_FILE         ?= .env                    # используем по умолчанию .env
+COMPOSE_TEST_YML  = -f docker-compose.test.yaml
 
-# ==== DOCKER ====
+# Список всех целей, которые не являются настоящими файлами
+.PHONY: help up down restart build rebuild logs shell \
+        migrate makemigrations \
+        dev prod clean \
+        test test-up test-build test-run test-down test-shell
+
+# =====================================================================
+#  DOCKER (prod / default)
+# =====================================================================
 up:
-	docker-compose --env-file $(ENV_FILE) up -d
-
-build:
-	docker-compose build
-
-rebuild:
-	docker-compose down -v
-	docker-compose build
-	docker-compose up -d
-
-logs:
-	docker-compose logs -f
+	$(COMPOSE) --env-file $(ENV_FILE) up -d
 
 down:
-	docker-compose down -v
+	$(COMPOSE) down -v
 
 restart:
-	docker-compose restart
+	$(COMPOSE) restart
 
-# ==== BACKEND ====
+build:
+	$(COMPOSE) build
+
+rebuild:
+	$(COMPOSE) down -v
+	$(COMPOSE) build
+	$(COMPOSE) --env-file $(ENV_FILE) up -d
+
+logs:
+	$(COMPOSE) logs -f
+
 shell:
-	docker-compose exec backend bash
+	$(COMPOSE) exec backend bash
 
 migrate:
-	docker-compose exec backend alembic upgrade head
+	$(COMPOSE) exec backend alembic upgrade head
 
 makemigrations:
-	docker-compose exec backend alembic revision --autogenerate -m "New migration"
+	$(COMPOSE) exec backend alembic revision --autogenerate -m "New migration"
 
-# ==== TESTING ====
-test-down:
-	docker-compose -f docker-compose.test.yaml down -v
 
 test-up:
-	docker-compose -f docker-compose.test.yaml up --build --abort-on-container-exit
+	$(COMPOSE) $(COMPOSE_TEST_YML) up -d --build postgres_test
 
-test-restart:	test-down test-up
+test-build:
+	$(COMPOSE) $(COMPOSE_TEST_YML) build test_runner
 
+test-run:
+	$(COMPOSE) $(COMPOSE_TEST_YML) run --rm test_runner
+
+test: test-up test-build
+	@echo "⏳  Waiting for postgres_test to warm up …"
+	sleep 3
+	$(MAKE) test-run
+	$(MAKE) test-down
+
+test-down:
+	$(COMPOSE) $(COMPOSE_TEST_YML) down -v
 
 test-shell:
-	docker-compose -f docker-compose.yaml -f docker-compose.test.yaml run --rm test_runner bash
+	$(COMPOSE) $(COMPOSE_TEST_YML) run --rm test_runner bash
 
-# ==== CLEAN ====
 clean:
 	find . -type d -name "__pycache__" -exec rm -r {} +
 	rm -rf .mypy_cache .pytest_cache logs.txt
