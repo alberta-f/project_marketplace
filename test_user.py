@@ -34,32 +34,32 @@ async def _auth_client():
 
 @pytest.mark.asyncio
 async def test_dupl_register():
-    async with AsyncClient(transport=ASGITransport(app=app), base_url='http://test') as client:
-        data = {
-            'email': 'testuser@example.com',
-            'username': 'tester',
-            'password': 'password1234',
-        }
-        response = await client.post('/users/register', json=data)
+    client = await _auth_client()
+    data = {
+        'email': 'testuser@example.com',
+        'username': 'tester',
+        'password': 'password1234',
+    }
+    response = await client.post('/users/register', json=data)
 
-        assert response.status_code == 400
-        assert "User already exists" in response.text
+    assert response.status_code == 400
+    assert "User already exists" in response.text
 
 
 @pytest.mark.asyncio
 async def test_login_error():
-    async with AsyncClient(transport=ASGITransport(app=app), base_url='http://test') as client:
-        data_incorrect = {
-            'email': 'testuser@example.com',
-            'password': 'password1234',
-        }
+    client = _auth_client()
+    data_incorrect = {
+        'email': 'testuser@example.com',
+        'password': 'password1234',
+    }
 
-        response = await client.post('/users/login', json=data_incorrect)
+    response = await client.post('/users/login', json=data_incorrect)
 
-        assert response.status_code == 401
+    assert response.status_code == 401
 
-        assert 'Invalid email or password' in response.text
-        assert config.session.cookie_name not in response.cookies
+    assert 'Invalid email or password' in response.text
+    assert config.session.cookie_name not in response.cookies
 
 @pytest.mark.asyncio
 async def test_login():
