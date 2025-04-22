@@ -17,7 +17,7 @@ class ArticleRepository(DBRepository[Article]):
             select(Article)
             .where(Article.id == id)
             .where(Article.deleted is False)
-            .options(selectinload(Article.categories))  # уже было
+            .options(selectinload(Article.categories))
         )
         return result.scalar_one_or_none()
 

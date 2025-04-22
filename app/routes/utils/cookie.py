@@ -10,7 +10,7 @@ def set_token_to_cookie(response: Response, token):
         value=token,
         path="/",
         httponly=False,
-        secure=False,  # True на проде
+        secure=True,
         samesite="lax",
     )
 
