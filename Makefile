@@ -1,21 +1,15 @@
-# =====================================================================
-#  CONFIG
-# =====================================================================
+
 COMPOSE          ?= docker-compose          # ← v2 (у alias docker‑compose тоже сработает)
-ENV_FILE         ?= .env                    # используем по умолчанию .env
 COMPOSE_TEST_YML  = -f docker-compose.test.yaml
 
-# Список всех целей, которые не являются настоящими файлами
 .PHONY: help up down restart build rebuild logs shell \
         migrate makemigrations \
         dev prod clean \
         test test-up test-build test-run test-down test-shell
 
-# =====================================================================
-#  DOCKER (prod / default)
-# =====================================================================
+
 up:
-	$(COMPOSE) --env-file $(ENV_FILE) up -d
+	$(COMPOSE) up -d
 
 down:
 	$(COMPOSE) down -v
@@ -29,7 +23,7 @@ build:
 rebuild:
 	$(COMPOSE) down -v
 	$(COMPOSE) build
-	$(COMPOSE) --env-file $(ENV_FILE) up -d
+	$(COMPOSE) up -d
 
 logs:
 	$(COMPOSE) logs -f
