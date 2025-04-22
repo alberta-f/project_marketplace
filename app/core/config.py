@@ -1,0 +1,75 @@
+from pydantic import BaseModel, Field, SecretStr
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+class BaseConfig(BaseSettings):
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+
+
+class DatabaseConfig(BaseConfig):
+    db: str = Field(..., alias="POSTGRES_DB")
+    user: str = Field(..., alias="POSTGRES_USER")
+    password: SecretStr = Field(..., alias="POSTGRES_PASSWORD")
+    host: str = Field(..., alias="POSTGRES_HOST")
+    port: int = Field(..., alias="POSTGRES_PORT")
+
+    @property
+    def url(self) -> str:
+        return f"postgresql+asyncpg://{self.user}:{self.password.get_secret_value()}@{self.host}:{self.port}/{self.db}"
+
+
+class MinioConfig(BaseConfig):
+    root_user: str = Field(..., alias="MINIO_ROOT_USER")
+    root_password: SecretStr = Field(..., alias="MINIO_ROOT_PASSWORD")
+    access_key: str = Field(..., alias="MINIO_ACCESS_KEY")
+    secret_key: SecretStr = Field(..., alias="MINIO_SECRET_KEY")
+    endpoint: str = Field(..., alias="MINIO_ENDPOINT")
+    bucket: str = Field(..., alias="S3_BUCKET")
+
+
+class SessionConfig(BaseConfig):
+    cookie_name: str = Field("session", alias="SESSION_COOKIE_NAME")
+
+
+class JWTConfig(BaseConfig):
+    secret_key: str = Field(..., alias='JWT_SECRET_KEY')
+    algorithm: str = Field(..., alias='JWT_ALGORITHM')
+    single_use_expire_mins: int = Field(...,
+                                    alias='JWT_EXPIRE_MINS')
+
+
+class AppConfig(BaseConfig):
+    url: str = Field(..., alias='APP_URL')
+
+
+class RabbitMQSettings(BaseSettings):
+    host: str
+    port: int
+    user: str
+    password: str
+
+    class Config:
+        env_prefix = "RABBITMQ_"
+
+
+class SMTPSettings(BaseSettings):
+    host: str
+    port: int
+    user: str
+    password: str
+    from_email: str = "no-reply@example.com"
+
+    class Config:
+        env_prefix = 'SMTP_'
+
+
+class Config(BaseModel):
+    database: DatabaseConfig = Field(default_factory=DatabaseConfig)
+    minio: MinioConfig = Field(default_factory=MinioConfig)
+    session: SessionConfig = Field(default_factory=SessionConfig)
+    jwt: JWTConfig = Field(default_factory=JWTConfig)
+    app: AppConfig = Field(default_factory=AppConfig)
+    rabbitmq: RabbitMQSettings = Field(default_factory=RabbitMQSettings)
+    smtp: SMTPSettings = Field(default_factory=SMTPSettings)
+
+config = Config()
